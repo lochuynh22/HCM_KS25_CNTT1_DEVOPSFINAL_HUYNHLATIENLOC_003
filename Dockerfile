@@ -30,10 +30,10 @@ WORKDIR /app
 # Chạy ứng dụng bằng user thường, không dùng root
 RUN addgroup -S spring && adduser -S spring -G spring
 # Chỉ lấy file JAR từ stage build
-COPY ______ /app/app.jar
-USER ______
+COPY --from=build /workspace/build/libs/app.jar /app/app.jar
+USER spring
 
 EXPOSE 8080
 
 # ENTRYPOINT dạng exec (mảng JSON)
-ENTRYPOINT []
+ENTRYPOINT ["java","-jar","/app/app.jar"]
