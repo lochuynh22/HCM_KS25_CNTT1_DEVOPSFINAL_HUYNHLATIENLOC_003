@@ -9,31 +9,32 @@
 FROM gradle:8.14-jdk21-alpine AS build
 WORKDIR /workspace
 
-# Copy build.gradle + settings.gradle trước, tải dependency để tận dụng cache layer
-COPY build.gradle ./setting.gradle
+# Copy cấu hình Gradle trước để tận dụng cache
+COPY build.gradle settings.gradle ./
 RUN gradle dependencies --no-daemon
 
-# Copy mã nguồn rồi đóng gói file JAR (bỏ qua test)
+# Copy source và build JAR
 COPY src ./src
 RUN gradle bootJar -x test --no-daemon
 
-# ---------- Stage 2: runtime - chỉ chứa JRE 21 + file JAR ----------
-FROM eclipe-temurin:21-jre-alpine  AS runtime
+# ---------- Stage 2: runtime ----------
+FROM eclipse-temurin:21-jre-alpine AS runtime
 
-# Phiên bản ứng dụng truyền vào lúc build (docker compose: build-arg APP_VERSION)
-ARG VERSION=dev
+# Nhận phiên bản lúc build
+ARG APP_VERSION=dev
 ENV APP_VERSION=${APP_VERSION} \
     JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=75"
 
 WORKDIR /app
 
-# Chạy ứng dụng bằng user thường, không dùng root
+# Tạo user thường để chạy ứng dụng
 RUN addgroup -S spring && adduser -S spring -G spring
-# Chỉ lấy file JAR từ stage build
+
+# Copy JAR từ stage build
 COPY --from=build /workspace/build/libs/app.jar /app/app.jar
+
 USER spring
 
 EXPOSE 8080
 
-# ENTRYPOINT dạng exec (mảng JSON)
-ENTRYPOINT ["java","-jar","/app/app.jar"]
+ENTRYPOINT ["java", "-jar", "/app/app.jar"]
