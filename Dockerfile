@@ -33,7 +33,7 @@ RUN addgroup -S spring && adduser -S spring -G spring
 COPY ______ /app/app.jar
 USER ______
 
-EXPOSE ______
+EXPOSE 8080
 
 # ENTRYPOINT dạng exec (mảng JSON)
-ENTRYPOINT 8080
+ENTRYPOINT []
